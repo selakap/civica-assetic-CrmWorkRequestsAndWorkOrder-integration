@@ -1,36 +1,36 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
-  TenantIdMurrindindi:
+  TenantId:
     Type: String
-    Description: "Murrindindi Tenant Id."
+    Description: "Tenant Id."
 
   TenantIntegrationIdCivicaToAssetic:
     Type: String
-    Description: "Murrindindi Tenant Inetgartion Id."
+    Description: "Tenant Inetgartion Id."
 
   TenantIntegrationIdAsseticToCivica:
     Type: String
-    Description: "Murrindindi Tenant Inetgartion Id."
+    Description: "Tenant Inetgartion Id."
 
   AuthorityHost:
     Type: String
-    Description: "Murrindindi Authority Host"
+    Description: "Authority Host"
 
   AuthorityUser:
     Type: String
-    Description: "Murrindindi Authority User"
+    Description: "Authority User"
 
   AuthorityPassword:
     Type: String
-    Description: "Murrindindi Authority Password"
+    Description: "Authority Password"
 
   AuthorityClientId:
     Type: String
-    Description: "Murrindindi Authority Authority ClientId"
+    Description: "Authority Authority ClientId"
 
   AuthorityClientSecret:
     Type: String
-    Description: "Murrindindi Authority Authority Secret"
+    Description: "Authority Authority Secret"
 
   AwsAccessKey:
     Type: String
@@ -44,9 +44,9 @@ Parameters:
     Type: String
     Description: "The AWS Region"
 
-  SGS3BucketName:
+  BucketName:
     Type: String
-    Description: "The smartglue bucket name."
+    Description: "The bucket name."
 
   CompletedEventUrl:
     Type: String
@@ -70,11 +70,11 @@ Parameters:
 
   VPCId:
     Type: String
-    Description: "The smartglue vpc id"
+    Description: "The vpc id"
 
   PrivateSubnet:
     Type: String
-    Description: "The smartglue PrivarteSubnetIds"
+    Description: "The PrivarteSubnetIds"
 
   ImageUri:
     Type: String
@@ -115,8 +115,8 @@ Resources:
                   - "s3:PutObject"
                   - "s3:ListBucket"
                 Resource:
-                  - !Sub "arn:aws:s3:::${SGS3BucketName}/TenantConfigurations/*"
-                  - !Sub "arn:aws:s3:::${SGS3BucketName}"
+                  - !Sub "arn:aws:s3:::${BucketName}/TenantConfigurations/*"
+                  - !Sub "arn:aws:s3:::${BucketName}"
               - Effect: "Allow"
                 Action:
                   - "lambda:InvokeFunction"
@@ -138,7 +138,7 @@ Resources:
           ToPort: -1
           CidrIp: 0.0.0.0/0 # Adjust as per your security requirements
 
-  LambdaFunctionMurrindindiAuthorityToAssetic:
+  LambdaFunctionTenantAuthorityToAssetic:
     Type: "AWS::Lambda::Function"
     Properties:
       Role: !GetAtt LambdaExecutionRole.Arn
@@ -154,9 +154,9 @@ Resources:
           - !Ref PrivateSubnet
       Environment:
         Variables:
-          TENANT_ID_MURRINDINDI: !Ref TenantIdMurrindindi
-          TENANT_INTEGRATION_ID_CIVICA_TO_ASSETIC_MURRINDINDI: !Ref TenantIntegrationIdCivicaToAssetic
-          TENANT_INTEGRATION_ID_ASSETIC_TO_CIVICA_MURRINDINDI: !Ref TenantIntegrationIdAsseticToCivica
+          TENANT_ID: !Ref TenantId
+          TENANT_INTEGRATION_ID_CIVICA_TO_ASSETIC: !Ref TenantIntegrationIdCivicaToAssetic
+          TENANT_INTEGRATION_ID_ASSETIC_TO_CIVICA: !Ref TenantIntegrationIdAsseticToCivica
           AUTHORITY_HOST: !Ref AuthorityHost
           AUTHORITY_USER: !Ref AuthorityUser
           AUTHORITY_PASSWORD: !Ref AuthorityPassword
@@ -165,7 +165,7 @@ Resources:
           AWS_ACCESS_KEY_INTEGRATION: !Ref AwsAccessKey
           AWS_SECRET_KEY_INTEGRATION: !Ref AwsSecretKey
           AWS_REGION_INTEGRATION: !Ref AwsRegion
-          AWS_SG_BUCKET_NAME: !Ref SGS3BucketName
+          AWS_BUCKET_NAME: !Ref BucketName
           COMPLETED_EVENT_URL: !Ref CompletedEventUrl
           COMPLETED_EVENT_API_KEY_VALUE: !Ref CompletedEventApiKey
           AUTHORITY_CONFIG_CONFIGFILE_NAME: !Ref AuthorityConfigFileName
@@ -173,22 +173,22 @@ Resources:
           ASSETIC_API_BASIC: !Ref AsseticAPIBasic
       Tags:
         - Key: "Project"
-          Value: "SmartGlue-Integrations-Managed"
+          Value: "Integrations-Managed"
         - Key: "Client"
-          Value: "Murrindindi"
+          Value: "Tenant"
 
-  LambdaScheduleRuleMurrindindiAuthorityToAssetic:
+  LambdaScheduleRuleTenantAuthorityToAssetic:
     Type: AWS::Events::Rule
     Properties:
       ScheduleExpression: "cron(0/5 * * * ? *)" # Every 5 mins starting from 00:00 UTC
       Targets:
-        - Arn: !GetAtt LambdaFunctionMurrindindiAuthorityToAssetic.Arn
-          Id: "MurrindindiAuthorityToAssetic"
+        - Arn: !GetAtt LambdaFunctionTenantAuthorityToAssetic.Arn
+          Id: "TenantAuthorityToAssetic"
 
-  LambdaInvokePermissionMurrindindiAuthorityToAssetic:
+  LambdaInvokePermissionTenantAuthorityToAssetic:
     Type: AWS::Lambda::Permission
     Properties:
       Action: "lambda:InvokeFunction"
-      FunctionName: !Ref LambdaFunctionMurrindindiAuthorityToAssetic
+      FunctionName: !Ref LambdaFunctionTenantAuthorityToAssetic
       Principal: "events.amazonaws.com"
-      SourceArn: !GetAtt LambdaScheduleRuleMurrindindiAuthorityToAssetic.Arn
+      SourceArn: !GetAtt LambdaScheduleRuleTenantAuthorityToAssetic.Arn

@@ -30,4 +30,4 @@ RUN ls -l ./
 # Set runtime interface client as default command for the container runtime
 ENTRYPOINT ["/usr/bin/java", "-cp", "./*", "com.amazonaws.services.lambda.runtime.api.client.AWSLambda"]
 # Pass the name of the function handler as an argument to the runtime
-CMD ["org.symphony3.smartglue.integration.murrindindi.handlers.AuthorityToAsseticHandler::handleRequest"]
+CMD ["org.example.integration.tenant.handlers.AuthorityToAsseticHandler::handleRequest"]

@@ -13,26 +13,26 @@ pipelines:
             - pip3 install --upgrade awscli
 
             - echo "Building Docker image..."
-            - docker build -t murrindindi_intgration .
+            - docker build -t tenant_intgration .
             - echo "Logging in to AWS ECR..."
             - export ECR_PASSWORD=$(aws ecr get-login-password --region ap-southeast-2)
             - echo $ECR_PASSWORD | docker login --username AWS --password-stdin 120121536163.dkr.ecr.ap-southeast-2.amazonaws.com
             - VERSION=$(date +%Y%m%d%H%M%S)
-            - docker tag murrindindi_intgration:latest $IMAGE_URI:$VERSION
+            - docker tag tenant_intgration:latest $IMAGE_URI:$VERSION
             - docker push $IMAGE_URI:$VERSION
             - echo "Deploying Lambda function..."
             - |
               aws cloudformation deploy --template-file ./cloudformations/cloudformation.yml \
-              --stack-name MurrindindiAuthorityToAsseticDev \
+              --stack-name TenantAuthorityToAsseticDev \
               --parameter-overrides \
-              PrivateSubnet=$SMARTGLUE_SUBNET_ID \
-              VPCId=$SMARTGLUE_VPC_ID \
+              PrivateSubnet=$SUBNET_ID \
+              VPCId=$VPC_ID \
               AsseticAPIBasic=$ASSETIC_API_BASIC \
               AsseticHost=$ASSETIC_HOST \
               AuthorityConfigFileName=$AUTHORITY_CONFIG_CONFIGFILE_NAME \
               CompletedEventApiKey=$COMPLETED_EVENT_API_KEY_VALUE \
               CompletedEventUrl=$COMPLETED_EVENT_URL \
-              SGS3BucketName=$AWS_SG_BUCKET_NAME \
+              BucketName=$AWS_BUCKET_NAME \
               AwsRegion=$AWS_REGION \
               AwsSecretKey=$AWS_SECRET_KEY_INTEGRATION \
               AwsAccessKey=$AWS_ACCESS_KEY_INTEGRATION \
@@ -41,9 +41,9 @@ pipelines:
               AuthorityPassword=$AUTHORITY_PASSWORD \
               AuthorityUser=$AUTHORITY_USER \
               AuthorityHost=$AUTHORITY_HOST \
-              TenantIntegrationIdAsseticToCivica=$TENANT_INTEGRATION_ID_ASSETIC_TO_CIVICA_MURRINDINDI \
-              TenantIntegrationIdCivicaToAssetic=$TENANT_INTEGRATION_ID_MURRINDINDI \
-              TenantIdMurrindindi=$TENANT_ID_MURRINDINDI \
+              TenantIntegrationIdAsseticToCivica=$TENANT_INTEGRATION_ID_ASSETIC_TO_CIVICA \
+              TenantIntegrationIdCivicaToAssetic=$TENANT_INTEGRATION_ID_CIVICA_TO_ASSETIC \
+              TenantId=$TENANT_ID \
               ImageUri=$IMAGE_URI:$VERSION \
               --capabilities CAPABILITY_NAMED_IAM
 
@@ -58,26 +58,26 @@ pipelines:
             - pip3 install --upgrade awscli
 
             - echo "Building Docker image..."
-            - docker build -t murrindindi_intgration .
+            - docker build -t tenant_intgration .
             - echo "Logging in to AWS ECR..."
             - export ECR_PASSWORD=$(aws ecr get-login-password --region ap-southeast-2)
             - echo $ECR_PASSWORD | docker login --username AWS --password-stdin 023225200251.dkr.ecr.ap-southeast-2.amazonaws.com
             - VERSION=$(date +%Y%m%d%H%M%S)
-            - docker tag murrindindi_intgration:latest $IMAGE_URI:$VERSION
+            - docker tag tenant_intgration:latest $IMAGE_URI:$VERSION
             - docker push $IMAGE_URI:$VERSION
             - echo "Deploying Lambda function..."
             - |
               aws cloudformation deploy --template-file ./cloudformations/cloudformation.yml \
-              --stack-name MurrindindiAuthorityToAsseticDev \
+              --stack-name TenantAuthorityToAsseticDev \
               --parameter-overrides \
-              PrivateSubnet=$SMARTGLUE_SUBNET_ID \
-              VPCId=$SMARTGLUE_VPC_ID \
+              PrivateSubnet=$SUBNET_ID \
+              VPCId=$VPC_ID \
               AsseticAPIBasic=$ASSETIC_API_BASIC \
               AsseticHost=$ASSETIC_HOST \
               AuthorityConfigFileName=$AUTHORITY_CONFIG_CONFIGFILE_NAME \
               CompletedEventApiKey=$COMPLETED_EVENT_API_KEY_VALUE \
               CompletedEventUrl=$COMPLETED_EVENT_URL \
-              SGS3BucketName=$AWS_SG_BUCKET_NAME \
+              BucketName=$AWS_BUCKET_NAME \
               AwsRegion=$AWS_REGION \
               AwsSecretKey=$AWS_SECRET_KEY_INTEGRATION \
               AwsAccessKey=$AWS_ACCESS_KEY_INTEGRATION \
@@ -86,9 +86,9 @@ pipelines:
               AuthorityPassword=$AUTHORITY_PASSWORD \
               AuthorityUser=$AUTHORITY_USER \
               AuthorityHost=$AUTHORITY_HOST \
-              TenantIntegrationIdAsseticToCivica=$TENANT_INTEGRATION_ID_ASSETIC_TO_CIVICA_MURRINDINDI \
-              TenantIntegrationIdCivicaToAssetic=$TENANT_INTEGRATION_ID_MURRINDINDI \
-              TenantIdMurrindindi=$TENANT_ID_MURRINDINDI \
+              TenantIntegrationIdAsseticToCivica=$TENANT_INTEGRATION_ID_ASSETIC_TO_CIVICA \
+              TenantIntegrationIdCivicaToAssetic=$TENANT_INTEGRATION_ID_CIVICA_TO_ASSETIC \
+              TenantId=$TENANT_ID \
               ImageUri=$IMAGE_URI:$VERSION \
               --capabilities CAPABILITY_NAMED_IAM
 
@@ -101,4 +101,4 @@ pipelines:
           script:
             - git fetch origin main
             - mvn clean verify
-            - mvn sonar:sonar -Dsonar.branch.name=${BITBUCKET_BRANCH} -Dsonar.organization=symphony3 -Dsonar.projectKey=murrindindi_authority_assetic_integration -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=$SONAR_TOKEN
+            - mvn sonar:sonar -Dsonar.branch.name=${BITBUCKET_BRANCH} -Dsonar.organization=REPLACE_ME -Dsonar.projectKey=tenant_authority_assetic_integration -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=$SONAR_TOKEN
