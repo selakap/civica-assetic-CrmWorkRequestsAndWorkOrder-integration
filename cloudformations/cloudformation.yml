@@ -1,0 +1,194 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  TenantIdMurrindindi:
+    Type: String
+    Description: "Murrindindi Tenant Id."
+
+  TenantIntegrationIdCivicaToAssetic:
+    Type: String
+    Description: "Murrindindi Tenant Inetgartion Id."
+
+  TenantIntegrationIdAsseticToCivica:
+    Type: String
+    Description: "Murrindindi Tenant Inetgartion Id."
+
+  AuthorityHost:
+    Type: String
+    Description: "Murrindindi Authority Host"
+
+  AuthorityUser:
+    Type: String
+    Description: "Murrindindi Authority User"
+
+  AuthorityPassword:
+    Type: String
+    Description: "Murrindindi Authority Password"
+
+  AuthorityClientId:
+    Type: String
+    Description: "Murrindindi Authority Authority ClientId"
+
+  AuthorityClientSecret:
+    Type: String
+    Description: "Murrindindi Authority Authority Secret"
+
+  AwsAccessKey:
+    Type: String
+    Description: "The AWS access KEY."
+
+  AwsSecretKey:
+    Type: String
+    Description: "The AWS secret key."
+
+  AwsRegion:
+    Type: String
+    Description: "The AWS Region"
+
+  SGS3BucketName:
+    Type: String
+    Description: "The smartglue bucket name."
+
+  CompletedEventUrl:
+    Type: String
+    Description: "completed event url"
+
+  CompletedEventApiKey:
+    Type: String
+    Description: "completed event api key"
+
+  AuthorityConfigFileName:
+    Type: String
+    Description: "Authority config file name"
+
+  AsseticHost:
+    Type: String
+    Description: "Assetic Host"
+
+  AsseticAPIBasic:
+    Type: String
+    Description: "Assetic Api Basic"
+
+  VPCId:
+    Type: String
+    Description: "The smartglue vpc id"
+
+  PrivateSubnet:
+    Type: String
+    Description: "The smartglue PrivarteSubnetIds"
+
+  ImageUri:
+    Type: String
+    Description: "The URI of the Docker image in ECR"
+
+Resources:
+  LambdaExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: "LambdaExecutionPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:*:*:*"
+              - Effect: "Allow"
+                Action:
+                  - "ec2:CreateNetworkInterface"
+                  - "ec2:DescribeNetworkInterfaces"
+                  - "ec2:DeleteNetworkInterface"
+                  - "ec2:AttachNetworkInterface"
+                Resource: "*"
+              - Effect: "Allow"
+                Action:
+                  - "s3:GetObject"
+                  - "s3:PutObject"
+                  - "s3:ListBucket"
+                Resource:
+                  - !Sub "arn:aws:s3:::${SGS3BucketName}/TenantConfigurations/*"
+                  - !Sub "arn:aws:s3:::${SGS3BucketName}"
+              - Effect: "Allow"
+                Action:
+                  - "lambda:InvokeFunction"
+                Resource: "*"
+
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPCId
+      GroupDescription: "Security group for Lambda functions"
+      SecurityGroupIngress:
+        - IpProtocol: "-1"
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0 # Adjust as per your security requirements
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0 # Adjust as per your security requirements
+
+  LambdaFunctionMurrindindiAuthorityToAssetic:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Role: !GetAtt LambdaExecutionRole.Arn
+      PackageType: Image
+      Code:
+        ImageUri: !Ref ImageUri
+      MemorySize: 512
+      Timeout: 600
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds:
+          - !Ref PrivateSubnet
+      Environment:
+        Variables:
+          TENANT_ID_MURRINDINDI: !Ref TenantIdMurrindindi
+          TENANT_INTEGRATION_ID_CIVICA_TO_ASSETIC_MURRINDINDI: !Ref TenantIntegrationIdCivicaToAssetic
+          TENANT_INTEGRATION_ID_ASSETIC_TO_CIVICA_MURRINDINDI: !Ref TenantIntegrationIdAsseticToCivica
+          AUTHORITY_HOST: !Ref AuthorityHost
+          AUTHORITY_USER: !Ref AuthorityUser
+          AUTHORITY_PASSWORD: !Ref AuthorityPassword
+          AUTHORITY_CLIENT_ID: !Ref AuthorityClientId
+          AUTHORITY_CLIENT_SECRET: !Ref AuthorityClientSecret
+          AWS_ACCESS_KEY_INTEGRATION: !Ref AwsAccessKey
+          AWS_SECRET_KEY_INTEGRATION: !Ref AwsSecretKey
+          AWS_REGION_INTEGRATION: !Ref AwsRegion
+          AWS_SG_BUCKET_NAME: !Ref SGS3BucketName
+          COMPLETED_EVENT_URL: !Ref CompletedEventUrl
+          COMPLETED_EVENT_API_KEY_VALUE: !Ref CompletedEventApiKey
+          AUTHORITY_CONFIG_CONFIGFILE_NAME: !Ref AuthorityConfigFileName
+          ASSETIC_HOST: !Ref AsseticHost
+          ASSETIC_API_BASIC: !Ref AsseticAPIBasic
+      Tags:
+        - Key: "Project"
+          Value: "SmartGlue-Integrations-Managed"
+        - Key: "Client"
+          Value: "Murrindindi"
+
+  LambdaScheduleRuleMurrindindiAuthorityToAssetic:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: "cron(0/5 * * * ? *)" # Every 5 mins starting from 00:00 UTC
+      Targets:
+        - Arn: !GetAtt LambdaFunctionMurrindindiAuthorityToAssetic.Arn
+          Id: "MurrindindiAuthorityToAssetic"
+
+  LambdaInvokePermissionMurrindindiAuthorityToAssetic:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref LambdaFunctionMurrindindiAuthorityToAssetic
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt LambdaScheduleRuleMurrindindiAuthorityToAssetic.Arn

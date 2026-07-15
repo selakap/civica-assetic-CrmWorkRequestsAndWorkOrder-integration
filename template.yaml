@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  LambdaFunctionMurrindindi:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: org.symphony3.smartglue.integration.murrindindi.handlers.AuthorityToAsseticHandler::handleRequest
+      Runtime: java17
+      CodeUri: .
+      MemorySize: 512
+      Timeout: 600
+      Environment:
+        Variables:
+          TENANT_ID_MURRINDINDI: "11"
+          TENANT_INTEGRATION_ID_CIVICA_TO_ASSETIC_MURRINDINDI: "31"
+          TENANT_INTEGRATION_ID_ASSETIC_TO_CIVICA_MURRINDINDI: "32"
+          AUTHORITY_HOST: "uat.murrindindi-vic.altitudelg.com"
+          AUTHORITY_USER: "sym3"
+          AUTHORITY_PASSWORD: "REPLACE_ME"
+          AUTHORITY_CLIENT_ID: "authority"
+          AUTHORITY_CLIENT_SECRET: "REPLACE_ME"
+          AWS_ACCESS_KEY_INTEGRATION: "REPLACE_ME"
+          AWS_SECRET_KEY_INTEGRATION: "REPLACE_ME"
+          AWS_REGION_INTEGRATION: "ap-southeast-2"
+          AWS_SG_BUCKET_NAME: "smartglue-assets-elvz7bjls6"
+          COMPLETED_EVENT_URL: "https://api.symphony3.dev/integrationNotifier/event"
+          COMPLETED_EVENT_API_KEY_VALUE: "REPLACE_ME"
+          AUTHORITY_CONFIG_CONFIGFILE_NAME: "TenantConfigurations/11/AuthorityTaskConfig/config.json"
+          ASSETIC_HOST: "murrindindisandbox.assetic.net"
+          ASSETIC_API_BASIC: "REPLACE_ME"
+      Events:
+        MyApi:
+          Type: Api
+          Properties:
+            Path: /crm
+            Method: post
+
+
+
+
